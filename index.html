@@ -1,0 +1,583 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Board Document Analyzer - Professional AI Analysis</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+        }
+        
+        .header {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+            text-align: center;
+        }
+        
+        .header h1 {
+            color: #333;
+            font-size: 32px;
+            margin-bottom: 10px;
+        }
+        
+        .header p {
+            color: #666;
+            font-size: 16px;
+        }
+        
+        .card {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+        
+        .upload-zone {
+            border: 3px dashed #ddd;
+            border-radius: 10px;
+            padding: 40px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        .upload-zone:hover {
+            border-color: #667eea;
+            background: #f8f9ff;
+        }
+        
+        input[type="file"] {
+            display: none;
+        }
+        
+        .btn {
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 12px 30px;
+            border-radius: 8px;
+            font-size: 16px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        .btn:hover {
+            background: #5568d3;
+            transform: translateY(-2px);
+        }
+        
+        .btn:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+            transform: none;
+        }
+        
+        .btn-small {
+            padding: 8px 16px;
+            font-size: 14px;
+        }
+        
+        .file-info {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 20px 0;
+            display: none;
+        }
+        
+        .file-info.show {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .loading {
+            text-align: center;
+            padding: 20px;
+            display: none;
+        }
+        
+        .loading.show {
+            display: block;
+        }
+        
+        .spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #667eea;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 10px;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .results {
+            display: none;
+        }
+        
+        .results.show {
+            display: block;
+        }
+        
+        .result-section {
+            margin-bottom: 20px;
+        }
+        
+        .result-section h3 {
+            color: #333;
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #667eea;
+        }
+        
+        .item {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 10px;
+            border-left: 4px solid #667eea;
+        }
+        
+        .item h4 {
+            color: #333;
+            margin-bottom: 8px;
+        }
+        
+        .item p {
+            color: #666;
+            line-height: 1.6;
+        }
+        
+        .badge {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: bold;
+            margin-left: 10px;
+        }
+        
+        .badge-high { background: #fee; color: #c00; }
+        .badge-medium { background: #fff3cd; color: #856404; }
+        .badge-low { background: #d1ecf1; color: #0c5460; }
+        .badge-approved { background: #d4edda; color: #155724; }
+        .badge-pending { background: #fff3cd; color: #856404; }
+        .badge-discussed { background: #d1ecf1; color: #0c5460; }
+        
+        .error {
+            background: #fee;
+            color: #c00;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 20px 0;
+            display: none;
+        }
+        
+        .error.show {
+            display: block;
+        }
+        
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.8);
+            z-index: 1000;
+        }
+        
+        .modal.show {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .modal-content {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            max-width: 500px;
+            width: 90%;
+        }
+        
+        .modal-content h2 {
+            margin-bottom: 20px;
+            color: #333;
+        }
+        
+        .modal-content input {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            font-size: 14px;
+            margin-bottom: 20px;
+        }
+        
+        .chat-container {
+            display: none;
+            margin-top: 20px;
+        }
+        
+        .chat-container.show {
+            display: block;
+        }
+        
+        .chat-messages {
+            max-height: 400px;
+            overflow-y: auto;
+            margin-bottom: 20px;
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 8px;
+        }
+        
+        .message {
+            margin-bottom: 15px;
+            padding: 12px;
+            border-radius: 8px;
+        }
+        
+        .message.user {
+            background: #667eea;
+            color: white;
+            margin-left: 50px;
+        }
+        
+        .message.assistant {
+            background: white;
+            margin-right: 50px;
+            border: 1px solid #ddd;
+        }
+        
+        .chat-input-container {
+            display: flex;
+            gap: 10px;
+        }
+        
+        .chat-input-container input {
+            flex: 1;
+            padding: 12px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            font-size: 14px;
+        }
+
+        .footer {
+            text-align: center;
+            padding: 20px;
+            color: white;
+            font-size: 14px;
+            margin-top: 40px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>📄 Board Document Analyzer</h1>
+            <p>AI-powered analysis of governance documents</p>
+        </div>
+
+        <!-- API Key Modal -->
+        <div class="modal" id="apiModal">
+            <div class="modal-content">
+                <h2>🔑 API Key Required</h2>
+                <p style="margin-bottom: 20px; color: #666;">Enter your Anthropic API key to get started.</p>
+                <input type="password" id="apiKeyInput" placeholder="sk-ant-api03-...">
+                <button class="btn" onclick="saveApiKey()">Save Key</button>
+                <p style="margin-top: 15px; font-size: 12px; color: #999;">Your key is stored locally in your browser.</p>
+            </div>
+        </div>
+
+        <div class="card">
+            <h2 style="margin-bottom: 20px;">Upload Document</h2>
+            <div class="upload-zone" id="uploadZone" onclick="document.getElementById('fileInput').click()">
+                <p style="font-size: 18px; margin-bottom: 10px;">📁 Click to upload</p>
+                <p style="color: #999;">PDF, Word, Excel, CSV, or Text files</p>
+            </div>
+            <input type="file" id="fileInput" accept=".pdf,.doc,.docx,.txt,.xlsx,.xls,.csv" onchange="handleFile(this.files[0])">
+            
+            <div class="file-info" id="fileInfo">
+                <div>
+                    <strong id="fileName"></strong>
+                    <span id="fileSize" style="color: #999; margin-left: 10px;"></span>
+                </div>
+                <button class="btn" onclick="analyzeDocument()">Analyze Document</button>
+            </div>
+
+            <div class="loading" id="loading">
+                <div class="spinner"></div>
+                <p>Analyzing document...</p>
+            </div>
+
+            <div class="error" id="error"></div>
+        </div>
+
+        <div class="results" id="results">
+            <div class="card">
+                <button class="btn btn-small" onclick="toggleChat()" style="float: right;">💬 AI Assistant</button>
+                <h2>Analysis Results</h2>
+                
+                <div class="result-section" style="margin-top: 30px;">
+                    <h3>📋 Executive Summary</h3>
+                    <div class="item">
+                        <p id="summary"></p>
+                    </div>
+                </div>
+
+                <div class="result-section">
+                    <h3>⚠️ Critical Risks</h3>
+                    <div id="risks"></div>
+                </div>
+
+                <div class="result-section">
+                    <h3>✅ Key Decisions</h3>
+                    <div id="decisions"></div>
+                </div>
+
+                <div class="result-section">
+                    <h3>❓ Essential Questions</h3>
+                    <div id="questions"></div>
+                </div>
+            </div>
+
+            <div class="card chat-container" id="chatContainer">
+                <h2>AI Assistant</h2>
+                <div class="chat-messages" id="chatMessages">
+                    <p style="text-align: center; color: #999;">Ask questions about the analysis...</p>
+                </div>
+                <div class="chat-input-container">
+                    <input type="text" id="chatInput" placeholder="Ask a question..." onkeypress="if(event.key==='Enter') sendMessage()">
+                    <button class="btn" onclick="sendMessage()">Send</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="footer">
+            <p>Built with AI • Powered by Claude</p>
+        </div>
+    </div>
+
+    <script>
+        let apiKey = localStorage.getItem('anthropic_api_key');
+        let currentFile = null;
+        let currentAnalysis = null;
+
+        if (!apiKey) {
+            document.getElementById('apiModal').classList.add('show');
+        }
+
+        function saveApiKey() {
+            const key = document.getElementById('apiKeyInput').value.trim();
+            if (key) {
+                localStorage.setItem('anthropic_api_key', key);
+                apiKey = key;
+                document.getElementById('apiModal').classList.remove('show');
+            }
+        }
+
+        function handleFile(file) {
+            if (!file) return;
+            currentFile = file;
+            document.getElementById('fileName').textContent = file.name;
+            document.getElementById('fileSize').textContent = (file.size / 1024).toFixed(1) + ' KB';
+            document.getElementById('fileInfo').classList.add('show');
+            document.getElementById('error').classList.remove('show');
+        }
+
+        async function analyzeDocument() {
+            if (!currentFile || !apiKey) return;
+
+            document.getElementById('loading').classList.add('show');
+            document.getElementById('error').classList.remove('show');
+            document.getElementById('results').classList.remove('show');
+
+            try {
+                const fileExt = currentFile.name.split('.').pop().toLowerCase();
+                let base64Data = null;
+                let textData = null;
+
+                if (fileExt === 'pdf') {
+                    base64Data = await readFileAsBase64(currentFile);
+                } else {
+                    textData = await readFileAsText(currentFile);
+                }
+
+                const response = await fetch('/api/analyze', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        apiKey: apiKey,
+                        fileType: fileExt,
+                        base64Data: base64Data,
+                        textData: textData
+                    })
+                });
+
+                if (!response.ok) {
+                    const errorData = await response.json().catch(() => ({}));
+                    throw new Error(errorData.error || `Error: ${response.status}`);
+                }
+
+                const data = await response.json();
+                currentAnalysis = data;
+                displayResults(data);
+
+            } catch (error) {
+                console.error('Full error:', error);
+                showError(error.message || 'Analysis failed. Please check your API key.');
+            } finally {
+                document.getElementById('loading').classList.remove('show');
+            }
+        }
+
+        async function readFileAsBase64(file) {
+            return new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    const base64 = e.target.result.split(',')[1];
+                    resolve(base64);
+                };
+                reader.onerror = reject;
+                reader.readAsDataURL(file);
+            });
+        }
+
+        async function readFileAsText(file) {
+            return new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.onload = (e) => resolve(e.target.result);
+                reader.onerror = reject;
+                reader.readAsText(file);
+            });
+        }
+
+        function displayResults(analysis) {
+            document.getElementById('summary').textContent = analysis.summary;
+
+            const risksDiv = document.getElementById('risks');
+            risksDiv.innerHTML = '';
+            if (analysis.risks && analysis.risks.length > 0) {
+                analysis.risks.forEach(risk => {
+                    risksDiv.innerHTML += `
+                        <div class="item">
+                            <h4>${risk.title} <span class="badge badge-${risk.severity}">${risk.severity.toUpperCase()}</span></h4>
+                            <p>${risk.description}</p>
+                        </div>
+                    `;
+                });
+            } else {
+                risksDiv.innerHTML = '<p style="color: #999;">No critical risks identified</p>';
+            }
+
+            const decisionsDiv = document.getElementById('decisions');
+            decisionsDiv.innerHTML = '';
+            if (analysis.decisions && analysis.decisions.length > 0) {
+                analysis.decisions.forEach(decision => {
+                    decisionsDiv.innerHTML += `
+                        <div class="item">
+                            <h4>${decision.title} <span class="badge badge-${decision.status}">${decision.status.toUpperCase()}</span></h4>
+                            <p>${decision.description}</p>
+                        </div>
+                    `;
+                });
+            } else {
+                decisionsDiv.innerHTML = '<p style="color: #999;">No key decisions identified</p>';
+            }
+
+            const questionsDiv = document.getElementById('questions');
+            questionsDiv.innerHTML = '';
+            if (analysis.questions && analysis.questions.length > 0) {
+                analysis.questions.forEach(question => {
+                    questionsDiv.innerHTML += `
+                        <div class="item">
+                            <h4>${question.title} <span class="badge badge-${question.priority}">${question.priority.toUpperCase()}</span></h4>
+                            <p>${question.description}</p>
+                        </div>
+                    `;
+                });
+            } else {
+                questionsDiv.innerHTML = '<p style="color: #999;">No essential questions identified</p>';
+            }
+
+            document.getElementById('results').classList.add('show');
+        }
+
+        function showError(message) {
+            const errorDiv = document.getElementById('error');
+            errorDiv.textContent = 'Error: ' + message;
+            errorDiv.classList.add('show');
+        }
+
+        function toggleChat() {
+            const chatContainer = document.getElementById('chatContainer');
+            if (chatContainer.classList.contains('show')) {
+                chatContainer.classList.remove('show');
+            } else {
+                chatContainer.classList.add('show');
+                chatContainer.scrollIntoView({ behavior: 'smooth' });
+            }
+        }
+
+        async function sendMessage() {
+            const input = document.getElementById('chatInput');
+            const message = input.value.trim();
+            if (!message || !apiKey) return;
+
+            const chatMessages = document.getElementById('chatMessages');
+            chatMessages.innerHTML += `<div class="message user">${message}</div>`;
+            input.value = '';
+
+            try {
+                const response = await fetch('/api/chat', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        apiKey: apiKey,
+                        message: message,
+                        context: currentAnalysis
+                    })
+                });
+
+                const data = await response.json();
+                chatMessages.innerHTML += `<div class="message assistant">${data.reply}</div>`;
+                chatMessages.scrollTop = chatMessages.scrollHeight;
+
+            } catch (error) {
+                chatMessages.innerHTML += `<div class="message assistant" style="background: #fee; border-color: #c00;">Error: ${error.message}</div>`;
+            }
+        }
+    </script>
+</body>
+</html>
