@@ -1,77 +1,58 @@
 export default async function handler(req, res) {
-  // Enable CORS
+  res.setHeader('Access-Control-Allow-Credentials', true);
   res.setHeader('Access-Control-Allow-Origin', '*');
-  res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+  res.setHeader('Access-Control-Allow-Methods', 'GET,OPTIONS,PATCH,DELETE,POST,PUT');
+  res.setHeader('Access-Control-Allow-Headers', 'X-CSRF-Token, X-Requested-With, Accept, Accept-Version, Content-Length, Content-MD5, Content-Type, Date, X-Api-Version');
 
   if (req.method === 'OPTIONS') {
-    return res.status(200).end();
+    res.status(200).end();
+    return;
   }
 
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Method not allowed' });
   }
 
-  const { apiKey, message, context } = req.body;
-
-  if (!apiKey || !message) {
-    return res.status(400).json({ error: 'API key and message required' });
-  }
-
   try {
-    let prompt = message;
-    
-    if (context) {
-      prompt = `Context: I have analyzed a board document with the following findings:
-- ${context.risks?.length || 0} risks identified
-- ${context.decisions?.length || 0} decisions documented
-- ${context.questions?.length || 0} questions raised
-- Summary: ${context.summary}
+    const { message, context } = req.body;
+    const apiKey = process.env.ANTHROPIC_API_KEY;
 
-User question: ${message}
-
-Please provide helpful advice, solutions, or insights related to this board governance matter.`;
-    } else {
-      prompt = `You are a board governance and corporate strategy expert. Help the user with their question.
-
-User question: ${message}
-
-Provide practical, actionable advice.`;
+    if (!apiKey) {
+      return res.status(500).json({ error: 'API key not configured' });
     }
 
-    const response = await fetch('https://api.anthropic.com/v1/messages', {
-      method: 'POST',
+    const response = await fetch("https://api.anthropic.com/v1/messages", {
+      method: "POST",
       headers: {
-        'Content-Type': 'application/json',
-        'x-api-key': apiKey,
-        'anthropic-version': '2023-06-01'
+        "Content-Type": "application/json",
+        "x-api-key": apiKey,
+        "anthropic-version": "2023-06-01"
       },
       body: JSON.stringify({
-        model: 'claude-sonnet-4-20250514',
-        max_tokens: 1000,
+        model: "claude-sonnet-4-20250514",
+        max_tokens: 2048,
         messages: [{
-          role: 'user',
-          content: prompt
+          role: "user",
+          content: `You are an AI assistant helping analyze a board document. Here is the analysis context:
+
+${JSON.stringify(context, null, 2)}
+
+User question: ${message}
+
+Provide a helpful, concise answer based on the analysis.`
         }]
       })
     });
 
     if (!response.ok) {
-      const errorData = await response.json();
-      return res.status(response.status).json({
-        error: errorData.error?.message || 'API request failed'
-      });
+      return res.status(response.status).json({ error: 'API request failed' });
     }
 
     const data = await response.json();
-    const reply = data.content[0].text;
-    
-    return res.status(200).json({ reply });
+    return res.status(200).json({ reply: data.content[0].text });
 
   } catch (error) {
     console.error('Chat error:', error);
-    return res.status(500).json({
-      error: error.message || 'Chat failed'
-    });
+    return res.status(500).json({ error: error.message });
   }
 }
