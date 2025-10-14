@@ -141,9 +141,9 @@
             <h2 style="margin-bottom: 20px;">Upload Document</h2>
             <div class="upload-zone" onclick="document.getElementById('fileInput').click()">
                 <p style="font-size: 18px; margin-bottom: 10px;">📁 Click to upload</p>
-                <p style="color: #999;">PDF, Word, Excel, CSV, or Text files</p>
+                <p style="color: #999;">PDF, Text, or CSV files</p>
             </div>
-            <input type="file" id="fileInput" accept=".pdf,.doc,.docx,.txt,.xlsx,.xls,.csv" onchange="handleFile(this.files[0])">
+            <input type="file" id="fileInput" accept=".pdf,.txt,.csv" onchange="handleFile(this.files[0])">
             
             <div class="file-info" id="fileInfo">
                 <div>
